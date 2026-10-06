@@ -28,14 +28,21 @@ function createServer() {
       const response = await fetch(url);
 
       if (!response.ok) {
-        return {
-          content: [{
-            type: "text",
-            text: `Corpus search failed: ${response.status} ${response.statusText}`
-          }],
-          isError: true
-        };
-      }
+  const body = await response.text();
+
+  return {
+    content: [{
+      type: "text",
+      text:
+        `Corpus search failed.\n` +
+        `Requested URL: ${url}\n` +
+        `Response URL: ${response.url}\n` +
+        `Status: ${response.status} ${response.statusText}\n` +
+        `Body: ${body.slice(0, 1000)}`
+    }],
+    isError: true
+  };
+}
 
       const data = await response.json();
 
