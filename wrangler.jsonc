@@ -2,6 +2,13 @@
   "name": "rachel-hebrew-mcp-server",
   "main": "src/index.ts",
   "compatibility_date": "2026-06-11",
+  "services": [
+    {
+      "binding": "CORPUS",
+      "service": "rachel-hebrew-corpus",
+      "environment": "production"
+    }
+  ],
   "observability": {
     "logs": {
       "enabled": true
