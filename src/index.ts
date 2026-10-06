@@ -1,10 +1,11 @@
 import { McpServer, createMcpHandler } from "@modelcontextprotocol/server";
 import { z } from "zod";
 
-const CORPUS_BASE =
-  "https://rachel-hebrew-corpus.raywebber1.workers.dev";
+type Env = {
+  CORPUS: Fetcher;
+};
 
-function createServer() {
+function createServer(env: Env) {
   const server = new McpServer({
     name: "rachel-hebrew-corpus",
     version: "1.0.0"
@@ -23,26 +24,26 @@ function createServer() {
     },
     async ({ lemma }) => {
       const url =
-        `${CORPUS_BASE}/search?lemma=${encodeURIComponent(lemma)}`;
+        `https://rachel-hebrew-corpus/search?lemma=${encodeURIComponent(lemma)}`;
 
-      const response = await fetch(url);
+      const response = await env.CORPUS.fetch(url);
 
       if (!response.ok) {
-  const body = await response.text();
+        const body = await response.text();
 
-  return {
-    content: [{
-      type: "text",
-      text:
-        `Corpus search failed.\n` +
-        `Requested URL: ${url}\n` +
-        `Response URL: ${response.url}\n` +
-        `Status: ${response.status} ${response.statusText}\n` +
-        `Body: ${body.slice(0, 1000)}`
-    }],
-    isError: true
-  };
-}
+        return {
+          content: [{
+            type: "text",
+            text:
+              `Corpus search failed.\n` +
+              `Requested URL: ${url}\n` +
+              `Response URL: ${response.url}\n` +
+              `Status: ${response.status} ${response.statusText}\n` +
+              `Body: ${body.slice(0, 1000)}`
+          }],
+          isError: true
+        };
+      }
 
       const data = await response.json();
 
@@ -68,9 +69,9 @@ function createServer() {
     },
     async ({ reference }) => {
       const url =
-        `${CORPUS_BASE}/context?reference=${encodeURIComponent(reference)}`;
+        `https://rachel-hebrew-corpus/context?reference=${encodeURIComponent(reference)}`;
 
-      const response = await fetch(url);
+      const response = await env.CORPUS.fetch(url);
 
       if (!response.ok) {
         return {
@@ -106,9 +107,9 @@ function createServer() {
     },
     async ({ lemma }) => {
       const url =
-        `${CORPUS_BASE}/search-context?lemma=${encodeURIComponent(lemma)}`;
+        `https://rachel-hebrew-corpus/search-context?lemma=${encodeURIComponent(lemma)}`;
 
-      const response = await fetch(url);
+      const response = await env.CORPUS.fetch(url);
 
       if (!response.ok) {
         return {
@@ -134,4 +135,9 @@ function createServer() {
   return server;
 }
 
-export default createMcpHandler(createServer);
+export default {
+  fetch(request: Request, env: Env) {
+    const handler = createMcpHandler(() => createServer(env));
+    return handler.fetch(request);
+  }
+};
